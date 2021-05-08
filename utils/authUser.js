@@ -42,3 +42,11 @@ const setToken = token => {
   cookie.set("token", token);
   Router.push("/");
 };
+
+
+export const logoutUser = email => {
+  cookie.set('userEmail', email);
+  cookie.remove("token");
+  Router.push("/login");
+  Router.reload();
+}
