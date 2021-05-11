@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Form, Button, Message, Segment, Divider } from "semantic-ui-react";
 import { loginUser } from "../utils/authUser";
 import { HeaderMessage, FooterMessage } from "../components/Common/WelcomeMessage";
-import cookie from 'js-cookie';
+import cookie from "js-cookie";
 
 function Login() {
-  console.log(cookie.get('userEmail'))
   const [user, setUser] = useState({
     email: "",
     password: ""
@@ -35,10 +34,10 @@ function Login() {
   };
 
   useEffect(() => {
-    document.title = 'Welcome Back'
-    const userEmail = cookie.get('userEmail')
-    if(userEmail) setUser(prev => ({ ...prev, email: userEmail}))
-  })
+    document.title = "Welcome Back";
+    const userEmail = cookie.get("userEmail");
+    if (userEmail) setUser(prev => ({ ...prev, email: userEmail }));
+  }, []);
 
   return (
     <>
