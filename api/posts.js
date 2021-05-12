@@ -5,14 +5,19 @@ const UserModel = require("../models/UserModel");
 const PostModel = require("../models/PostModel");
 const FollowerModel = require("../models/FollowerModel");
 const uuid = require("uuid").v4;
+const {
+  newLikeNotification,
+  removeLikeNotification,
+  newCommentNotification,
+  removeCommentNotification
+} = require("../utilsServer/notificationActions");
 
 // CREATE A POST
 
 router.post("/", authMiddleware, async (req, res) => {
   const { text, location, picUrl } = req.body;
 
-  if (text.length < 1)
-    return res.status(401).send("Text must be atleast 1 character");
+  if (text.length < 1) return res.status(401).send("Text must be atleast 1 character");
 
   try {
     const newPost = {
@@ -71,7 +76,6 @@ router.get("/", authMiddleware, async (req, res) => {
 
     const loggedUser = await FollowerModel.findOne({ user: userId });
 
-
     if (loggedUser.following.length === 0) {
       postsToBeSent = posts.filter(post => post.user._id.toString() === userId);
     }
@@ -91,12 +95,11 @@ router.get("/", authMiddleware, async (req, res) => {
       
       
     }
-    // console.log(postsToBeSent.length);
 
      postsToBeSent.length > 0 &&
       postsToBeSent.sort((a, b) => [new Date(b.createdAt) - new Date(a.createdAt)]);
-
-
+      
+      
     return res.json(postsToBeSent);
   } catch (error) {
     console.error(error);
@@ -167,8 +170,7 @@ router.post("/like/:postId", authMiddleware, async (req, res) => {
       return res.status(404).send("No Post found");
     }
 
-    const isLiked =
-      post.likes.filter(like => like.user.toString() === userId).length > 0;
+    const isLiked = post.likes.filter(like => like.user.toString() === userId).length > 0;
 
     if (isLiked) {
       return res.status(401).send("Post already liked");
@@ -176,6 +178,10 @@ router.post("/like/:postId", authMiddleware, async (req, res) => {
 
     await post.likes.unshift({ user: userId });
     await post.save();
+
+    if (post.user.toString() !== userId) {
+      await newLikeNotification(userId, postId, post.user.toString());
+    }
 
     return res.status(200).send("Post liked");
   } catch (error) {
@@ -209,6 +215,10 @@ router.put("/unlike/:postId", authMiddleware, async (req, res) => {
 
     await post.save();
 
+    if (post.user.toString() !== userId) {
+      await removeLikeNotification(userId, postId, post.user.toString());
+    }
+
     return res.status(200).send("Post Unliked");
   } catch (error) {
     console.error(error);
@@ -240,6 +250,7 @@ router.post("/comment/:postId", authMiddleware, async (req, res) => {
   try {
     const { postId } = req.params;
 
+    const { userId } = req;
     const { text } = req.body;
 
     if (text.length < 1)
@@ -252,12 +263,22 @@ router.post("/comment/:postId", authMiddleware, async (req, res) => {
     const newComment = {
       _id: uuid(),
       text,
-      user: req.userId,
+      user: userId,
       date: Date.now()
     };
 
     await post.comments.unshift(newComment);
     await post.save();
+
+    if (post.user.toString() !== userId) {
+      await newCommentNotification(
+        postId,
+        newComment._id,
+        userId,
+        post.user.toString(),
+        text
+      );
+    }
 
     return res.status(200).json(newComment._id);
   } catch (error) {
@@ -289,6 +310,10 @@ router.delete("/:postId/:commentId", authMiddleware, async (req, res) => {
       await post.comments.splice(indexOf, 1);
 
       await post.save();
+
+      if (post.user.toString() !== userId) {
+        await removeCommentNotification(postId, commentId, userId, post.user.toString());
+      }
 
       return res.status(200).send("Deleted Successfully");
     };

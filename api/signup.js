@@ -3,10 +3,12 @@ const router = express.Router();
 const UserModel = require("../models/UserModel");
 const ProfileModel = require("../models/ProfileModel");
 const FollowerModel = require("../models/FollowerModel");
+const NotificationModel = require("../models/NotificationModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const isEmail = require("validator/lib/isEmail");
-const userPng = "https://res.cloudinary.com/indersingh/image/upload/v1593464618/App/user_mklcpl.png";
+const userPng =
+  "https://res.cloudinary.com/indersingh/image/upload/v1593464618/App/user_mklcpl.png";
 
 const regexUserName = /^(?!.*\.\.)(?!.*\.$)[^\W][\w.]{0,29}$/;
 
@@ -41,8 +43,6 @@ router.post("/", async (req, res) => {
     twitter,
     instagram
   } = req.body.user;
-
-  console.log(username);
 
   if (!isEmail(email)) return res.status(401).send("Invalid Email");
 
@@ -81,6 +81,7 @@ router.post("/", async (req, res) => {
 
     await new ProfileModel(profileFields).save();
     await new FollowerModel({ user: user._id, followers: [], following: [] }).save();
+    await new NotificationModel({ user: user._id, notifications: [] }).save();
 
     const payload = { userId: user._id };
     jwt.sign(payload, process.env.jwtSecret, { expiresIn: "2d" }, (err, token) => {
