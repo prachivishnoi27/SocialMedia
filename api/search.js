@@ -1,24 +1,29 @@
 const express = require("express");
-const router = express.Router()
-const authMiddleware = require("../middleware/authMiddleware")
-const UserModel = require("../models/UserModel")
+const router = express.Router();
+const authMiddleware = require("../middleware/authMiddleware");
+const UserModel = require("../models/UserModel");
 
-router.get("/:searchText", authMiddleware, async (req,res) => {
+router.get("/:searchText", authMiddleware, async (req, res) => {
+  try {
     const { searchText } = req.params;
+    const { userId } = req;
 
-    if(searchText.length === 0) return;
+    if (searchText.length === 0) return;
 
-    try {
-        let userPattern = new RegExp(`${searchText}`)
+    let userPattern = new RegExp(`^${searchText}`);
 
-        const results = await UserModel.find({
-            name: { $regex: userPattern, $options: "i"}
-        });
-        res.json(results);
-    } catch (e) {
-        console.error(e)
-        return res.status(500).send(`Server error`)
-    }
-})
+    const results = await UserModel.find({
+      name: { $regex: userPattern, $options: "i" }
+    });
+
+    const resultsToBeSent =
+      results.length > 0 && results.filter(result => result._id.toString() !== userId);
+
+    return res.status(200).json(resultsToBeSent.length > 0 ? resultsToBeSent : results);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send(`Server error`);
+  }
+});
 
 module.exports = router;

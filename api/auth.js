@@ -2,22 +2,26 @@ const express = require("express");
 const router = express.Router();
 const UserModel = require("../models/UserModel");
 const FollowerModel = require("../models/FollowerModel");
+const ChatModel = require("../models/ChatModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const isEmail = require("validator/lib/isEmail");
-const authMiddleware = require("../middleware/authMiddleware")
+const authMiddleware = require("../middleware/authMiddleware");
 
 router.get("/", authMiddleware, async (req, res) => {
-  const { userId } = req
+  const { userId } = req;
+
   try {
-    const user = await UserModel.findById(userId)
+    const user = await UserModel.findById(userId);
+
     const userFollowStats = await FollowerModel.findOne({ user: userId });
+
     return res.status(200).json({ user, userFollowStats });
-  } catch (e) {
-    console.error(e);
-    res.status(500).send('Server error');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send(`Server error`);
   }
-})
+});
 
 router.post("/", async (req, res) => {
   const { email, password } = req.body.user;
@@ -40,6 +44,12 @@ router.post("/", async (req, res) => {
     const isPassword = await bcrypt.compare(password, user.password);
     if (!isPassword) {
       return res.status(401).send("Invalid Credentials");
+    }
+
+    const chatModel = await ChatModel.findOne({ user: user._id });
+
+    if (!chatModel) {
+      await new ChatModel({ user: user._id, chats: [] }).save();
     }
 
     const payload = { userId: user._id };

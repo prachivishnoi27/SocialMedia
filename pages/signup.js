@@ -70,6 +70,7 @@ function Signup() {
           cancel = canceler;
         })
       });
+      
       console.log(res);
 
       if (errorMsg !== null) setErrorMsg(null);
