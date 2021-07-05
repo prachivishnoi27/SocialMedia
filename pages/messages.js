@@ -101,7 +101,7 @@ function Messages({ chatsData, user }) {
         msgSendToUserId: openChatId.current,
         msg
       });
-      console.log("emitted send new msg socket" );
+      // console.log("emitted send new msg socket" );
     }
   };
 
