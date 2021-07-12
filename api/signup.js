@@ -8,8 +8,7 @@ const ChatModel = require("../models/ChatModel")
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const isEmail = require("validator/lib/isEmail");
-const userPng =
-  "https://res.cloudinary.com/indersingh/image/upload/v1593464618/App/user_mklcpl.png";
+const userPng = "https://res.cloudinary.com/prachicloud/image/upload/v1626077430/user_ydfu3l.png";
 
 const regexUserName = /^(?!.*\.\.)(?!.*\.$)[^\W][\w.]{0,29}$/;
 
