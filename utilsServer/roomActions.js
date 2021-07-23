@@ -8,6 +8,7 @@ const addUser = async (userId, socketId) => {
   }
   //
   else {
+    // making sure there are no duplicate user
     if (user && user.socketId !== socketId) {
       await removeUser(user.socketId);
     }
